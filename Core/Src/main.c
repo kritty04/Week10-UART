@@ -48,6 +48,16 @@ char TxDataBuffer[32] =
 { 0 };
 char RxDataBuffer[32] =
 { 0 };
+char data[32]={0};
+uint8_t menu1 =1;
+uint8_t menu2 =0;
+uint8_t ledstate = 1 ;
+uint8_t F=10;
+uint8_t n = 0;
+uint16_t T=0;
+uint64_t timestamp=0;
+uint8_t switchstate[2]={0};
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -94,37 +104,167 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  {
-  char temp[]="HELLO WORLD\r\n please type something to test UART\r\n";
-  HAL_UART_Transmit(&huart2, (uint8_t*)temp, strlen(temp),10);
-  }
+
+  char temp[]="*********MENU1*********\r\n\n 0:LED Contr0l\r\n 1:Button Status\r\n";
+  char temp2[]="*********MENU2*********\r\n\n a:Speed Up 1 Hz\r\n s:Speed Down 1 Hz \r\n d:On/off \r\n x:Back\r\n";
+  char temp3[]="*********MENU2*********\r\n\n show Button Status \r\n x:Back\r\n";
+  char temp4[]="Input incorrect\r\n";
+  char temp5[]="*********MENU5*********\r\n\n\n 0:LED Contr0l\r\n 1:Button Status\r\n";
+  HAL_UART_Transmit(&huart2, (uint8_t*)temp, strlen(temp),100);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 	while (1)
 	{
-		/*Method 1 Polling Mode*/
+
+		switchstate[0]=HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13);
+
+				/*Method 1 Polling Mode*/
 
 //		UARTRecieveAndResponsePolling();
 
 		/*Method 2 Interrupt Mode*/
-//		HAL_UART_Receive_IT(&huart2,  (uint8_t*)RxDataBuffer, 32);
+		HAL_UART_Receive_IT(&huart2,  (uint8_t*)RxDataBuffer, 32);
 
 		/*Method 2 W/ 1 Char Received*/
-//		int16_t inputchar = UARTRecieveIT();
-//		if(inputchar!=-1)
-//		{
+		int16_t inputchar = UARTRecieveIT();
+		if(inputchar!=-1)
+		{
 
-//			sprintf(TxDataBuffer, "ReceivedChar:[%c]\r\n", inputchar);
-//			HAL_UART_Transmit(&huart2, (uint8_t*)TxDataBuffer, strlen(TxDataBuffer), 1000);
-//		}
+			sprintf(TxDataBuffer, "ReceivedChar:[%c]\r\n", inputchar);
+			HAL_UART_Transmit(&huart2, (uint8_t*)TxDataBuffer, strlen(TxDataBuffer), 1000);
 
+
+
+		}
 
 
 		/*This section just simmulate Work Load*/
-		HAL_Delay(100);
-		HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+		if(F>0)
+		{ T=1000/F;
+			if(HAL_GetTick()-timestamp>=T )
+			{	timestamp=HAL_GetTick();
+				if (ledstate==1)
+				{
+					HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+				}
+				else
+				{
+					HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, 0);
+				}
+			}
+		}
+		switch(menu1)
+		{
+			case 0 :
+				HAL_UART_Transmit(&huart2, (uint8_t*)temp, strlen(temp),10);
+				menu1=1;
+				break;
+			case 1 :
+				switch(inputchar)
+				{
+					case -1:
+						break;
+					case '0':
+						menu1=2;
+						break;
+					case '1':
+						menu1=4;
+						break;
+					default :
+						HAL_UART_Transmit(&huart2, (uint8_t*)temp4, strlen(temp4),10);
+						break;
+				}
+				break;
+			case 2 :
+				HAL_UART_Transmit(&huart2, (uint8_t*)temp2, strlen(temp2),100);
+				menu1=3;
+				break;
+			case 3 :
+				switch(inputchar)
+				{
+					case -1:
+						break;
+					case 'a':
+						F=F+1;
+						sprintf(data, "F=%d\r\n", F);
+						HAL_UART_Transmit(&huart2, (uint8_t*)data, strlen(data), 100);
+						menu1=2;
+						break;
+					case 's':
+
+						if(F >=1 )
+						{
+							F=F-1;
+						}
+						sprintf(data, "F=%d\r\n", F);
+						HAL_UART_Transmit(&huart2, (uint8_t*)data, strlen(data), 100);
+						menu1=2;
+						break;
+					case 'd':
+						ledstate=~ledstate;
+						if (ledstate==1)
+						{
+							char data[]="LED ON\r\n";
+							HAL_UART_Transmit(&huart2, (uint8_t*)data, strlen(data),10);
+						}
+						else
+						{
+							char data[]="LED OFF\r\n";
+							HAL_UART_Transmit(&huart2, (uint8_t*)data, strlen(data),10);
+						}
+						break;
+						menu1=2;
+					case 'x':
+						menu1=0;
+						char data[]="back\r\n";
+						HAL_UART_Transmit(&huart2, (uint8_t*)data, strlen(data),10);
+						break;
+					default :
+						HAL_UART_Transmit(&huart2, (uint8_t*)temp4, strlen(temp4),10);
+						menu1=2;
+						break;
+				}
+				break;
+			case 4 :
+				HAL_UART_Transmit(&huart2, (uint8_t*)temp3, strlen(temp3),10);
+				menu1=5;
+				break;
+			case 5 :
+				switch(inputchar)
+				{
+
+					case -1:
+						if (switchstate[0]==0 && switchstate[1]==1 )
+							{
+							char data[]="button press\r\n";
+							HAL_UART_Transmit(&huart2, (uint8_t*)data, strlen(data),10);
+							}
+						else if (switchstate[0]==1 && switchstate[1]==0 )
+							{
+							char data[]="button unpress\r\n";
+							HAL_UART_Transmit(&huart2, (uint8_t*)data, strlen(data),10);
+							}
+						break;
+					case 'x':
+						menu1=0;
+						char data[]="back\r\n";
+						HAL_UART_Transmit(&huart2, (uint8_t*)data, strlen(data),10);
+						break;
+					default :
+						HAL_UART_Transmit(&huart2, (uint8_t*)temp4, strlen(temp4),10);
+						menu1=4;
+						break;
+				}
+				break;
+			default :
+				HAL_UART_Transmit(&huart2, (uint8_t*)temp4, strlen(temp4),10);
+				menu1=0;
+				break;
+		}
+		switchstate[1]=switchstate[0];
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -227,11 +367,11 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : B1_Pin */
-  GPIO_InitStruct.Pin = B1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  /*Configure GPIO pin : PC13 */
+  GPIO_InitStruct.Pin = GPIO_PIN_13;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pin : LD2_Pin */
   GPIO_InitStruct.Pin = LD2_Pin;
@@ -253,8 +393,27 @@ void UARTRecieveAndResponsePolling()
 	HAL_UART_Transmit(&huart2, (uint8_t*)TxDataBuffer, strlen(TxDataBuffer), 1000);
 
 }
+//
+//void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+//{
+//	if (GPIO_Pin == GPIO_PIN_13)
+//		{	if (n ==0 )
+//			{
+//				n=1;
+//				char data[]="button press\r\n";
+//				HAL_UART_Transmit(&huart2, (uint8_t*)data, strlen(data),10);
+//			}
+//			else if (n==1)
+//			{
+//				char data[]="button press\r\n";
+//				HAL_UART_Transmit(&huart2, (uint8_t*)data, strlen(data),10);
+//			n=0;
+//			}
+//		}
 
 
+
+//}
 int16_t UARTRecieveIT()
 {
 	static uint32_t dataPos =0;

@@ -76,8 +76,8 @@ all: main-build
 main-build: Week10-UART.elf secondary-outputs
 
 # Tool invocations
-Week10-UART.elf: $(OBJS) $(USER_OBJS) C:\git\Week10-UART\10\STM32F411RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-g++ -o "Week10-UART.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\git\Week10-UART\10\STM32F411RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Week10-UART.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
+Week10-UART.elf: $(OBJS) $(USER_OBJS) C:\Git\Week10\ UART\STM32F411RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-g++ -o "Week10-UART.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Git\Week10 UART\STM32F411RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Week10-UART.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
