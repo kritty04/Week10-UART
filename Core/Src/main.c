@@ -143,7 +143,7 @@ int main(void)
 
 		/*This section just simmulate Work Load*/
 		if(F>0)
-		{ T=1000/F;
+		{ T=500/F;
 			if(HAL_GetTick()-timestamp>=T )
 			{	timestamp=HAL_GetTick();
 				if (ledstate==1)
